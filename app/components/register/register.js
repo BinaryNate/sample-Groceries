@@ -2,6 +2,7 @@ import dialogs from 'ui/dialogs';
 import { fetch } from 'fetch';
 import validator from 'email-validator';
 import Component from 'nativescript-component';
+import config from '../../shared/config';
 import handleHttpErrors from '../../shared/utils/handleHttpErrors';
 
 class Register extends Component {
@@ -27,7 +28,7 @@ class Register extends Component {
         })
         .then(handleHttpErrors)
         .then(() => dialogs.alert('Your account was successfully created.'))
-        .then(() => frameModule.topmost().navigate('views/login/login'))
+        .then(() => this.navigate({ component: 'login' }))
         .catch(error => {
             console.log(error);
             dialogsModule.alert({
