@@ -1,2 +1,3 @@
-var applicationModule = require("application");
-applicationModule.start({ moduleName: "views/login/login" });
+import application from 'application';
+
+application.start({ moduleName: 'components/login/login' })
