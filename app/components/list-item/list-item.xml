@@ -1,0 +1,4 @@
+<GridLayout loaded="onLoaded" columns="*, auto">
+    <Label text="{{ name }}"/>
+    <Image src="res://ic_menu_delete"  tap="delete" col="1" />
+</GridLayout>

@@ -15,7 +15,7 @@ class List extends Component {
         let listView = this.view.getViewById('groceryList');
 
         if (this.view.ios) {
-            swipeDelete.enable(listView, index => this.deleteItem(index));
+            swipeDelete.enable(listView, index => this.deleteItemByIndex(index));
         }
         this.emptyList();
         this.set('isLoading', true);
@@ -84,13 +84,6 @@ class List extends Component {
         socialShare.shareText(listString);
     }
 
-    // TODO: re-enable the delete button
-    // delete(args) {
-    //     var item = args.view.bindingContext;
-    //     var index = groceryList.indexOf(item);
-    //     groceryList.delete(index);
-    // }
-
     loadList() {
 
         return fetch(`${config.apiUrl}Groceries`, {
@@ -106,7 +99,9 @@ class List extends Component {
             data.Result.forEach(grocery => {
                 groceryList.push({
                     name: grocery.Name,
-                    id: grocery.Id
+                    id: grocery.Id,
+                    // Pass the child list-item component a function it can use to delete itself.
+                    deleteItem: this.deleteItem.bind(this)
                 });
             });
         });
@@ -121,7 +116,12 @@ class List extends Component {
         }
     };
 
-    deleteItem(index) {
+    deleteItem(item) {
+        let index = this.get('groceryList').indexOf(item);
+        return this.deleteItemByIndex(index);
+    }
+
+    deleteItemByIndex(index) {
 
         let groceryList = this.get('groceryList');
 

@@ -1,4 +1,4 @@
-<Page navigatingTo="onNavigatingTo">
+<Page navigatingTo="onNavigatingTo" xmlns:l="components/list-item">
     <Page.actionBar>
         <ActionBar title="Groceries">
             <ActionBar.actionItems>
@@ -11,10 +11,10 @@
         <Button text="Add" tap="add" row="0" col="1" />
         <ListView items="{{ groceryList }}" id="groceryList" row="1" colSpan="2">
             <ListView.itemTemplate>
-                <GridLayout columns="*, auto">
-                    <Label text="{{ name }}"/>
-                    <Image src="res://ic_menu_delete" ios:visibility="collapsed" col="1" />
-                </GridLayout>
+                <!-- When an embedded component is used in a ListView.itemTemplate as is done here, the
+                     embedded component's binding context is automatically set to the list item, and this
+                     binding context is immutable (i.e. you can't use `this.set('foo', foo)` to set a new property on it). -->
+                <l:list-item />
             </ListView.itemTemplate>
         </ListView>
         <ActivityIndicator busy="{{ isLoading }}" rowSpan="2" colSpan="2" />
