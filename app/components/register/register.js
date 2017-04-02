@@ -1,39 +1,56 @@
-var dialogsModule = require("ui/dialogs");
-var frameModule = require("ui/frame");
+import dialogs from 'ui/dialogs';
+import { fetch } from 'fetch';
+import validator from 'email-validator';
+import Component from 'nativescript-component';
+import handleHttpErrors from '../../shared/utils/handleHttpErrors';
 
-var UserViewModel = require("../../shared/view-models/user-view-model");
-var user = new UserViewModel();
+class Register extends Component {
 
-exports.loaded = function(args) {
-    var page = args.object;
-    page.bindingContext = user;
-};
+    init() {
+        this.set('email', '');
+        this.set('password', '');
+    }
 
-function completeRegistration() {
-    user.register()
-        .then(function() {
-            dialogsModule
-                .alert("Your account was successfully created.")
-                .then(function() {
-                    frameModule.topmost().navigate("views/login/login");
-                });
-        }).catch(function(error) {
+    completeRegistration() {
+
+        // From the `register()` method that was originally in user-view-model.
+        return fetch(`${config.apiUrl}Users`, {
+            method: 'POST',
+            body: JSON.stringify({
+                Username: this.get('email'),
+                Email: this.get('email'),
+                Password: this.get('password')
+            }),
+            headers: {
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(handleHttpErrors)
+        .then(() => dialogs.alert('Your account was successfully created.'))
+        .then(() => frameModule.topmost().navigate('views/login/login'))
+        .catch(error => {
             console.log(error);
-            dialogsModule
-                .alert({
-                    message: "Unfortunately we were unable to create your account.",
-                    okButtonText: "OK"
-                });
-        });
-}
-
-exports.register = function() {
-    if (user.isValidEmail()) {
-        completeRegistration();
-    } else {
-        dialogsModule.alert({
-            message: "Enter a valid email address.",
-            okButtonText: "OK"
+            dialogsModule.alert({
+                message: 'Unfortunately we were unable to create your account.',
+                okButtonText: 'OK'
+            });
         });
     }
-};
+
+    register() {
+
+        let email = this.get('email');
+        let isValidEmail = validator.validate(email);
+
+        if (isValidEmail) {
+            return this.completeRegistration();
+        } else {
+            return dialogsModule.alert({
+                message: 'Enter a valid email address.',
+                okButtonText: 'OK'
+            });
+        }
+    }
+}
+
+Register.export(exports);

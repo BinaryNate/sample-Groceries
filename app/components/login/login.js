@@ -46,7 +46,7 @@ class Login extends Component {
             throw error;
         })
         .then(() => {
-            this.navigate('views/list/list');
+            this.navigate({ component: 'Register' });
         });
     }
 
