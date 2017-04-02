@@ -31,7 +31,7 @@ class Register extends Component {
         .then(() => this.navigate({ component: 'login' }))
         .catch(error => {
             console.log(error);
-            dialogsModule.alert({
+            dialogs.alert({
                 message: 'Unfortunately we were unable to create your account.',
                 okButtonText: 'OK'
             });
@@ -46,7 +46,7 @@ class Register extends Component {
         if (isValidEmail) {
             return this.completeRegistration();
         } else {
-            return dialogsModule.alert({
+            return dialogs.alert({
                 message: 'Enter a valid email address.',
                 okButtonText: 'OK'
             });

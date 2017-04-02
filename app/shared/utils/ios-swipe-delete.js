@@ -1,7 +1,9 @@
+/* globals NSObject, __extends, UITableViewCellEditingStyle, UITableViewDataSource */
+
 var callback;
 var EditableDataSource;
 
-if (typeof NSObject != "undefined") {
+if (typeof NSObject !== 'undefined') {
     EditableDataSource = (function(_super) {
         __extends(EditableDataSource, _super);
         function EditableDataSource() {

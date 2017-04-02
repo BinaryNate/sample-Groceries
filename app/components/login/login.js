@@ -1,3 +1,4 @@
+/* globals UIBarStyle */
 import dialogs from 'ui/dialogs';
 import frames from 'ui/frame';
 import { fetch } from 'fetch';

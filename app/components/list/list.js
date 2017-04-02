@@ -1,5 +1,6 @@
 import dialogs from 'ui/dialogs';
 import { ObservableArray } from 'data/observable-array';
+import { fetch } from 'fetch';
 import Component from 'nativescript-component';
 import socialShare from 'nativescript-social-share';
 import config from '../../shared/config';
@@ -76,7 +77,6 @@ class List extends Component {
 
         let groceryList = this.get('groceryList');
         let list = [];
-        let finalList = '';
         for (let i = 0, size = groceryList.length; i < size ; i++) {
             list.push(groceryList.getItem(i).name);
         }
@@ -105,7 +105,7 @@ class List extends Component {
                 });
             });
         });
-    };
+    }
 
     emptyList() {
 
@@ -114,7 +114,7 @@ class List extends Component {
         while (groceryList.length) {
             groceryList.pop();
         }
-    };
+    }
 
     deleteItem(item) {
         let index = this.get('groceryList').indexOf(item);
@@ -136,7 +136,7 @@ class List extends Component {
         })
         .then(handleHttpErrors)
         .then(() => groceryList.splice(index, 1));
-    };
+    }
 }
 
 List.export(exports);
