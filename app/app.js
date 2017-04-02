@@ -1,3 +1,3 @@
 import application from 'application';
 
-application.start({ moduleName: 'components/login/login' })
+application.start({ moduleName: "views/login/login" });
