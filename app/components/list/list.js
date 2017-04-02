@@ -1,74 +1,143 @@
-var dialogsModule = require("ui/dialogs");
-var observableModule = require("data/observable");
-var GroceryListViewModel = require("../../shared/view-models/grocery-list-view-model");
-var socialShare = require("nativescript-social-share");
-var swipeDelete = require("../../shared/utils/ios-swipe-delete");
-var page;
+import dialogs from 'ui/dialogs';
+import { ObservableArray } from 'data/observable-array';
+import Component from 'nativescript-component';
+import socialShare from 'nativescript-social-share';
+import config from '../../shared/config';
+import handleHttpErrors from '../../shared/utils/handleHttpErrors';
+import swipeDelete from '../../shared/utils/ios-swipe-delete';
 
-var groceryList = new GroceryListViewModel([]);
-var pageData = observableModule.fromObject({
-    groceryList: groceryList,
-    grocery: ""
-});
+class List extends Component {
 
-exports.loaded = function(args) {
-    page = args.object;
-    var listView = page.getViewById("groceryList");
+    init() {
 
-    if (page.ios) {
-        swipeDelete.enable(listView, function(index) {
-            groceryList.delete(index);
+        let groceryList = new ObservableArray();
+        this.set('groceryList', groceryList);
+        let listView = this.view.getViewById('groceryList');
+
+        if (this.view.ios) {
+            swipeDelete.enable(listView, index => this.deleteItem(index));
+        }
+        this.emptyList();
+        this.set('isLoading', true);
+
+        return this.loadList()
+        .then(() => {
+            this.set('isLoading', false);
+            listView.animate({
+                opacity: 1,
+                duration: 1000
+            });
         });
     }
-    
-    page.bindingContext = pageData;
 
-    groceryList.empty();
-    pageData.set("isLoading", true);
-    groceryList.load().then(function() {
-        pageData.set("isLoading", false);
-        listView.animate({
-            opacity: 1,
-            duration: 1000
-        });
-    });
-};
+    add() {
 
-exports.add = function() {
-    // Check for empty submissions
-    if (pageData.get("grocery").trim() !== "") {
+        let grocery = this.get('grocery');
+
+        // Check for empty submissions
+        if (grocery.trim() === '') {
+            return dialogs.alert({
+                message: 'Enter a grocery item',
+                okButtonText: 'OK'
+            });
+        }
+
         // Dismiss the keyboard
-        page.getViewById("grocery").dismissSoftInput();
-        groceryList.add(pageData.get("grocery"))
-            .catch(function(error) {
-                console.log(error);
-                dialogsModule.alert({
-                    message: "An error occurred while adding an item to your list.",
-                    okButtonText: "OK"
+        this.view.getViewById('grocery').dismissSoftInput();
+
+        // From the `add()` method that was originally in grocery-list-view-model
+        return fetch(`${config.apiUrl}Groceries`, {
+            method: 'POST',
+            body: JSON.stringify({
+                Name: grocery
+            }),
+            headers: {
+                'Authorization': 'Bearer ' + config.token,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(handleHttpErrors)
+        .then(response => response.json())
+        .then(data => {
+            this.get('groceryList').push({ name: grocery, id: data.Result.Id });
+        })
+        .catch(error => {
+            console.log(error);
+            dialogs.alert({
+                message: 'An error occurred while adding an item to your list.',
+                okButtonText: 'OK'
+            });
+        })
+        // Empty the input field
+        .then(() => this.set('grocery', ''));
+    }
+
+    share() {
+
+        let groceryList = this.get('groceryList');
+        let list = [];
+        let finalList = '';
+        for (let i = 0, size = groceryList.length; i < size ; i++) {
+            list.push(groceryList.getItem(i).name);
+        }
+        let listString = list.join(', ').trim();
+        socialShare.shareText(listString);
+    }
+
+    // TODO: re-enable the delete button
+    // delete(args) {
+    //     var item = args.view.bindingContext;
+    //     var index = groceryList.indexOf(item);
+    //     groceryList.delete(index);
+    // }
+
+    loadList() {
+
+        return fetch(`${config.apiUrl}Groceries`, {
+            headers: {
+                'Authorization': 'Bearer ' + config.token
+            }
+        })
+        .then(handleHttpErrors)
+        .then(response => response.json())
+        .then(data => {
+            let groceryList = this.get('groceryList');
+
+            data.Result.forEach(grocery => {
+                groceryList.push({
+                    name: grocery.Name,
+                    id: grocery.Id
                 });
             });
-        // Empty the input field
-        pageData.set("grocery", "");
-    } else {
-        dialogsModule.alert({
-            message: "Enter a grocery item",
-            okButtonText: "OK"
         });
-    }
-};
+    };
 
-exports.share = function() {
-    var list = [];
-    var finalList = "";
-    for (var i = 0, size = groceryList.length; i < size ; i++) {
-        list.push(groceryList.getItem(i).name);
-    }
-    var listString = list.join(", ").trim();
-    socialShare.shareText(listString);
-};
+    emptyList() {
 
-exports.delete = function(args) {
-    var item = args.view.bindingContext;
-    var index = groceryList.indexOf(item);
-    groceryList.delete(index);
-};
+        let groceryList = this.get('groceryList');
+
+        while (groceryList.length) {
+            groceryList.pop();
+        }
+    };
+
+    deleteItem(index) {
+
+        let groceryList = this.get('groceryList');
+
+        let { id } = groceryList.getItem(index);
+
+        return fetch(`${config.apiUrl}Groceries/${id}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': 'Bearer ' + config.token,
+                'Content-Type': 'application/json'
+            }
+        })
+        .then(handleHttpErrors)
+        .then(() => groceryList.splice(index, 1));
+    };
+}
+
+List.export(exports);
+
